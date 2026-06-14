@@ -1,4 +1,5 @@
 import pygame
+import math
 from pygame.math import Vector2
 
 from scripts.pytron_body import PytronBody
@@ -18,7 +19,12 @@ class Pytron:
             previous_part.previous_part = part
             part.next_part = previous_part
             previous_part = part
-        self.move_input = Vector2()
+        
+        self.state = 'normal'
+        self.state_timer = 0
+
+        self.time_to_eat = 30
+        self.time_to_lunge = 60
     
 
     def update(self):
@@ -28,7 +34,78 @@ class Pytron:
             return
         
         self.controller.update()
+        self.update_state()
 
 
     def draw(self, surface):
         pass
+    
+
+    def move(self, move_input, move_strength):
+        match self.state:
+            case 'coiled':
+                move_strength *= 0.25
+            case 'lunging':
+                move_strength *= 1.5
+            case 'eating':
+                move_strength *= 0.75
+            case _:
+                pass
+        self.head.set_drive_force(move_input, move_strength)
+
+
+    def change_state(self, new_state):
+        if self.state == new_state:
+            return
+        self.exit_state()
+        self.state = new_state
+        self.enter_state()
+
+
+    def enter_state(self):
+        match self.state:
+            case 'coiled':
+                pass
+            case 'lunging':
+                pass
+            case 'eating':
+                self.eat_timer = self.time_to_eat
+            case _:
+                pass
+        self.head.change_head_type(self.state)
+        self.state_timer = 0
+    
+
+    def exit_state(self):
+        match self.state:
+            case 'coiled':
+                pass
+            case 'lunging':
+                pass
+            case 'eating':
+                pass
+            case _:
+                pass
+
+
+    def update_state(self):
+        self.state_timer += 1
+        match self.state:
+            case 'coiled':
+                if self.controller.bite_input == False:
+                    self.change_state('lunging')
+            case 'lunging':
+                if self.state_timer >= self.time_to_lunge:
+                    self.change_state('normal')
+                else:
+                    for entity in self.game.entities:
+                        if isinstance(entity, PytronBody) and self != entity.pytron and self.head.collider.colliderect(entity.collider):
+                            entity.detach()
+                            self.change_state('eating')
+                            break
+            case 'eating':
+                if self.state_timer >= self.time_to_eat:
+                    self.change_state('normal')
+            case _:
+                if self.controller.bite_input:
+                    self.change_state('coiled')

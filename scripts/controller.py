@@ -8,6 +8,8 @@ class Controller:
         self.game = game
         self.pytron = pytron
         self.move_input = Vector2()
+        self.bite_input = False
+        self.shoot_input = False
         self.drive_strength = 12
 
 
@@ -23,7 +25,8 @@ class PlayerController(Controller):
         self.move_input.y = self.game.input_down - self.game.input_up
         if self.move_input.length() != 0:
             self.move_input.normalize()
-        self.pytron.head.set_drive_force(self.move_input, self.drive_strength)
+        self.bite_input = self.game.input_dash
+        self.pytron.move(self.move_input, self.drive_strength)
 
 
 class NPCController(Controller):
@@ -46,5 +49,11 @@ class NPCController(Controller):
         self.move_input.y = random.randint(-1, 1)
         if self.move_input.length() != 0:
             self.move_input.normalize()
-        self.pytron.head.set_drive_force(self.move_input, self.drive_strength)
+        self.pytron.move(self.move_input, self.drive_strength)
+
+        if self.pytron.state == 'coiled':
+            self.bite_input = False
+        else:
+            self.bite_input = random.randint(0, 2) == 0
+        
         self.think_timer = 0

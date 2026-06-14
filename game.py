@@ -26,6 +26,8 @@ class Game:
         self.assets = {
             'background-1' : load_image('background/background-1.png'),
             'pytron-head-1' : load_image('pytron/heads/pytron_head-1_0.png'),
+            'pytron-head-1-bite-start' : load_image('pytron/heads/pytron_head-1_1.png'),
+            'pytron-head-1-bite' : load_image('pytron/heads/pytron_head-1_2.png'),
             'pytron-body-1' : load_image('pytron/bodies/pytron_body-1_0.png'),
         }
         self.background_image = self.assets['background-1']

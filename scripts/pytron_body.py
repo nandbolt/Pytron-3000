@@ -57,12 +57,6 @@ class PytronBody:
         self.collider.right = self.position.x + self.width
         self.collider.bottom = self.position.y + self.height
 
-        # Eat
-        if self.body_type == 'head':
-            for entity in self.game.entities:
-                if isinstance(entity, PytronBody) and self.pytron != entity.pytron and self.collider.colliderect(entity.collider):
-                    entity.detach()
-
         self.force.x = 0
         self.force.y = 0
 
@@ -90,6 +84,15 @@ class PytronBody:
         self.body_type = 'head'
         self.on_body_type_changed()
     
+
+    def change_head_type(self, state):
+        key = f'pytron-{self.body_type}-1'
+        if state == 'coiled':
+            key += '-bite-start'
+        elif state == 'lunging' or state == 'eating':
+            key += '-bite'
+        self.image = self.game.assets[key]
+
 
     def change_to_body(self):
         if self.body_type == 'body':
