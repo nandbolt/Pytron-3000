@@ -11,10 +11,10 @@ class Pytron:
         self.game = game
         self.controller = NPCController(game, self)
 
-        self.head = PytronBody(game, x, y, 'head')
+        self.head = PytronBody(game, x, y, self, 'head')
         previous_part = self.head
         for i in range(segments - 1):
-            part = PytronBody(game, x, y, 'body')
+            part = PytronBody(game, x, y, self, 'body')
             previous_part.previous_part = part
             part.next_part = previous_part
             previous_part = part

@@ -5,8 +5,9 @@ from pygame.math import Vector2
 class PytronBody:
 
 
-    def __init__(self, game, x, y, body_type='body'):
+    def __init__(self, game, x, y, pytron, body_type='body'):
         self.game = game
+        self.pytron = pytron
 
         # Physics
         self.position = Vector2(x, y)
@@ -23,14 +24,18 @@ class PytronBody:
         self.body_type = body_type
         self.image = self.game.assets[f'pytron-{body_type}-1']
         self.facing_direction = Vector2(1, 0)
-        self.width = 16
-        self.height = 16
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
         self.angular_acceleration = 0.1
+
+        # Collisions
+        self.collider = pygame.Rect(self.position.x, self.position.y, self.width, self.height)
 
         # Parts
         self.next_part = None
         self.previous_part = None
 
+        self.on_body_type_changed()
         game.entities.append(self)
     
 
@@ -45,6 +50,18 @@ class PytronBody:
         self.handle_boundary_collisions()
 
         self.handle_facing_direction()
+
+        # Collider
+        self.collider.left = self.position.x
+        self.collider.top = self.position.y
+        self.collider.right = self.position.x + self.width
+        self.collider.bottom = self.position.y + self.height
+
+        # Eat
+        if self.body_type == 'head':
+            for entity in self.game.entities:
+                if isinstance(entity, PytronBody) and self.pytron != entity.pytron and self.collider.colliderect(entity.collider):
+                    entity.detach()
 
         self.force.x = 0
         self.force.y = 0
@@ -142,3 +159,14 @@ class PytronBody:
         elif self.position.y > y2:
             self.position.y = y2
             self.velocity.y = 0
+
+
+    def detach(self):
+        if self.next_part != None:
+            self.next_part.previous_part = None
+        if self.previous_part != None:
+            self.previous_part.next_part = None
+        self.next_part = None
+        self.previous_part = None
+        if self.body_type == 'head':
+            self.pytron.head = None
