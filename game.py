@@ -1,18 +1,20 @@
 import sys
 import pygame
+import random
 from pygame.math import Vector2
 
 from scripts.utils import load_image
 from scripts.pytron import Pytron
+from scripts.controller import PlayerController, NPCController
 
 class Game:
     def __init__(self):
         # Pygame
         pygame.init()
         pygame.display.set_caption('Pytron3000')
-        self.screen_base_width = 320
-        self.screen_base_height = 180
-        self.screen_scale = 4
+        self.screen_base_width = 640
+        self.screen_base_height = 360
+        self.screen_scale = 2
         self.screen = pygame.display.set_mode((self.screen_base_width * self.screen_scale, self.screen_base_height * self.screen_scale))
         self.clock = pygame.time.Clock()
 
@@ -27,22 +29,25 @@ class Game:
         self.input_left = False
         self.input_down = False
         self.input_up = False
+        self.input_dash = False
+        self.input_shoot = False
 
-        # Player
-        self.player = Pytron(self, self.screen_base_width * 0.5, self.screen_base_height * 0.5, 5)
+        # Entities
+        self.player = None
+        self.snakes = []
+
+        self.start()
     
     def run(self):
         while True:
             # Update entities
-            move_input = Vector2(self.input_right - self.input_left, self.input_down - self.input_up)
-            if move_input.length() != 0:
-                move_input.normalize()
-            self.player.set_move_direction(move_input)
-            self.player.update()
+            for snake in self.snakes:
+                snake.update()
 
             # Render
             self.screen.fill((0, 0, 0))
-            self.player.draw(self.screen)
+            for snake in self.snakes:
+                snake.draw(self.screen)
 
             # Input
             for event in pygame.event.get():
@@ -58,6 +63,10 @@ class Game:
                         self.input_down = True
                     if event.key == pygame.K_w:
                         self.input_up = True
+                    if event.key == pygame.K_SPACE:
+                        self.input_dash = True
+                    if event.key == pygame.K_j:
+                        self.input_shoot = True
                     if event.key == pygame.K_F11:
                         pygame.display.toggle_fullscreen()
                 if event.type == pygame.KEYUP:
@@ -69,10 +78,39 @@ class Game:
                         self.input_down = False
                     if event.key == pygame.K_w:
                         self.input_up = False
+                    if event.key == pygame.K_SPACE:
+                        self.input_dash = False
+                    if event.key == pygame.K_j:
+                        self.input_shoot = False
 
             # Pygame
             pygame.display.update()
             self.clock.tick(60)
+
+
+
+    def restart(self):
+        self.player = None
+        self.snakes = []
+
+        self.start()
+
+
+    def start(self):
+        self.player = Pytron(self, self.screen_base_width * 0.5, self.screen_base_height * 0.5, 5)
+        self.player.set_controller(PlayerController(self, self.player))
+        self.snakes = [self.player]
+        for i in range(10):
+            self.spawn_npc_snake()
+
+
+    def spawn_npc_snake(self):
+        x = random.randrange(0, self.screen_base_width)
+        y = random.randrange(0, self.screen_base_height)
+        segments = random.randint(2, 5)
+        snake = Pytron(self, x, y, segments)
+        snake.set_controller(NPCController(self, snake))
+        self.snakes.append(snake)
 
 def main():
     Game().run()
