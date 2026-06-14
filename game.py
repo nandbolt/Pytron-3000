@@ -18,6 +18,8 @@ class Game:
         self.room_width = 640
         self.room_height = 360
         self.room = pygame.Surface((self.room_width, self.room_height))
+        self.decals = pygame.Surface((self.room_width, self.room_height))
+        self.decals.set_colorkey((0, 0, 0))
 
         # Screen
         self.screen = pygame.display.set_mode((1280, 720))
@@ -29,6 +31,13 @@ class Game:
             'pytron-head-1-bite-start' : load_image('pytron/heads/pytron_head-1_1.png'),
             'pytron-head-1-bite' : load_image('pytron/heads/pytron_head-1_2.png'),
             'pytron-body-1' : load_image('pytron/bodies/pytron_body-1_0.png'),
+            'particle-blood' : load_image('particle/particle-blood.png'),
+            'decal-blood-splatter-1' : load_image('decal/decal-blood-splatter-1.png'),
+            'decal-blood-splatter-2' : load_image('decal/decal-blood-splatter-2.png'),
+            'decal-blood-splatter-3' : load_image('decal/decal-blood-splatter-3.png'),
+            'decal-trail-1' : load_image('decal/decal-trail-1.png'),
+            'decal-trail-2' : load_image('decal/decal-trail-2.png'),
+            'decal-trail-3' : load_image('decal/decal-trail-3.png'),
         }
         self.background_image = self.assets['background-1']
 
@@ -43,6 +52,7 @@ class Game:
         # Entities
         self.player = None
         self.entities = []
+        self.particles = []
 
         self.start()
     
@@ -55,8 +65,14 @@ class Game:
             # Render
             self.room.fill((0, 0, 0))
             self.room.blit(self.background_image, (0, 0))
+            self.room.blit(self.decals, (0, 0))
             for entity in self.entities:
                 entity.draw(self.room)
+            for particle in self.particles.copy():
+                kill = particle.update()
+                particle.draw(self.room)
+                if kill:
+                    self.particles.remove(particle)
             self.screen.blit(pygame.transform.scale(self.room, self.screen.get_size()))
 
             # Input

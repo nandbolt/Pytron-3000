@@ -1,5 +1,6 @@
 import pygame
 import math
+import random
 from pygame.math import Vector2
 
 class PytronBody:
@@ -46,6 +47,9 @@ class PytronBody:
         self.velocity += self.force * self.imass
         self.velocity *= self.damping
         self.position += self.velocity
+        if self.velocity.length() > 0.5:
+            trail_index = random.randint(1, 3)
+            self.game.decals.blit(self.game.assets[f'decal-trail-{trail_index}'], self.position)
 
         self.handle_boundary_collisions()
 

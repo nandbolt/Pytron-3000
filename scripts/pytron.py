@@ -1,9 +1,11 @@
 import pygame
 import math
+import random
 from pygame.math import Vector2
 
 from scripts.pytron_body import PytronBody
 from scripts.controller import NPCController
+from scripts.particle import Particle
 
 class Pytron:
 
@@ -70,6 +72,9 @@ class Pytron:
                 pass
             case 'eating':
                 self.eat_timer = self.time_to_eat
+                
+                splatter_index = random.randint(1, 3)
+                self.game.decals.blit(self.game.assets[f'decal-blood-splatter-{splatter_index}'], self.head.position)
             case _:
                 pass
         self.head.change_head_type(self.state)
@@ -104,6 +109,8 @@ class Pytron:
                             self.change_state('eating')
                             break
             case 'eating':
+                particle = Particle(self.game, self.head.position, 5, 'blood', Vector2(random.randrange(-1, 1), random.randrange(-1, 1)))
+                self.game.particles.append(particle)
                 if self.state_timer >= self.time_to_eat:
                     self.change_state('normal')
             case _:
