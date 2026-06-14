@@ -1,5 +1,6 @@
 import sys
 import pygame
+from pygame.math import Vector2
 
 from scripts.utils import load_image
 from scripts.pytron import Pytron
@@ -14,7 +15,8 @@ class Game:
 
         # Assets
         self.assets = {
-            'pytron-head-1' : load_image('pytron/heads/pytron_head-1_0.png')
+            'pytron-head-1' : load_image('pytron/heads/pytron_head-1_0.png'),
+            'pytron-body-1' : load_image('pytron/bodies/pytron_body-1_0.png'),
         }
 
         # Inputs
@@ -24,12 +26,16 @@ class Game:
         self.input_up = False
 
         # Player
-        self.player = Pytron(self, (100, 100))
+        self.player = Pytron(self, 600, 300, 5)
     
     def run(self):
         while True:
             # Update entities
-            self.player.update((self.input_right - self.input_left, self.input_down - self.input_up))
+            move_input = Vector2(self.input_right - self.input_left, self.input_down - self.input_up)
+            if move_input.length() != 0:
+                move_input.normalize()
+            self.player.set_move_direction(move_input)
+            self.player.update()
 
             # Render
             self.screen.fill((0, 0, 0))
