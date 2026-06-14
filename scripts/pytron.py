@@ -2,62 +2,33 @@ import pygame
 from pygame.math import Vector2
 
 from scripts.pytron_body import PytronBody
+from scripts.controller import NPCController
 
 class Pytron:
 
 
     def __init__(self, game, x, y, segments=2):
         self.game = game
-        self.controller = None
-        self.parts = [0 for i in range(segments)]
-        for i in range(len(self.parts)):
-            self.parts[i] = PytronBody(game, x, y)
-        self.parts[0].change_to_head()
-        self.pull_strength = 1
-        self.rest_length = 16
+        self.controller = NPCController(game, self)
+
+        self.head = PytronBody(game, x, y, 'head')
+        previous_part = self.head
+        for i in range(segments - 1):
+            part = PytronBody(game, x, y, 'body')
+            previous_part.previous_part = part
+            part.next_part = previous_part
+            previous_part = part
         self.move_input = Vector2()
     
 
     def update(self):
-        part_count = len(self.parts)
-
-        # Head
-        if part_count > 0:
-            head = self.parts[0]
-            if self.controller != None:
-                self.controller.update()
-                head.set_move_direction(self.controller.move_input)
-            head.update()
-
-        # Body
-        for i in range(1, part_count):
-            move_input = [0, 0]
-
-            body = self.parts[i]
-            target_part = self.parts[i - 1]
-            r = target_part.position - body.position
-            distance = r.length()
-            if distance != 0:
-                if distance < self.rest_length:
-                    r.x = 0
-                    r.y = 0
-                else:
-                    r.normalize()
-
-            body.set_move_direction(r * distance / 256)
-            body.update()
+        if self.head == None:
+            if self in self.game.entities:
+                self.game.entities.remove(self)
+            return
+        
+        self.controller.update()
 
 
     def draw(self, surface):
-        part_count = len(self.parts)
-        for i in range(0, part_count):
-            self.parts[part_count - i - 1].draw(surface)
-    
-
-    def set_move_direction(self, move_direction):
-        self.move_input.x = move_direction.x
-        self.move_input.y = move_direction.y
-    
-
-    def set_controller(self, controller):
-        self.controller = controller
+        pass

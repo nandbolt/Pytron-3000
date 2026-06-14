@@ -8,6 +8,7 @@ class Controller:
         self.game = game
         self.pytron = pytron
         self.move_input = Vector2()
+        self.drive_strength = 12
 
 
     def update(self):
@@ -22,6 +23,7 @@ class PlayerController(Controller):
         self.move_input.y = self.game.input_down - self.game.input_up
         if self.move_input.length() != 0:
             self.move_input.normalize()
+        self.pytron.head.set_drive_force(self.move_input, self.drive_strength)
 
 
 class NPCController(Controller):
@@ -37,7 +39,6 @@ class NPCController(Controller):
         self.think_timer += 1
         if self.think_timer >= self.time_to_think:
             self.think()
-        self.pytron.set_move_direction(self.move_input)
     
 
     def think(self):
@@ -45,5 +46,5 @@ class NPCController(Controller):
         self.move_input.y = random.randint(-1, 1)
         if self.move_input.length() != 0:
             self.move_input.normalize()
-
+        self.pytron.head.set_drive_force(self.move_input, self.drive_strength)
         self.think_timer = 0

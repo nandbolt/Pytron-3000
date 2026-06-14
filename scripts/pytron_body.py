@@ -1,46 +1,71 @@
 import pygame
+import math
 from pygame.math import Vector2
 
 class PytronBody:
 
 
-    def __init__(self, game, x, y, body_type=0):
+    def __init__(self, game, x, y, body_type='body'):
         self.game = game
+
+        # Physics
         self.position = Vector2(x, y)
         self.velocity = Vector2()
-        self.move_input = Vector2()
+        self.force = Vector2()
+        self.imass = 1 / 10
+        self.damping = 0.75
+        self.next_pull_constant = 0.1
+        self.previous_pull_constant = 0.05
+        self.rest_length = 12
+        self.drive_force = Vector2()
+
+        # Body
         self.body_type = body_type
-        self.image = pygame.transform.scale(self.game.assets['pytron-body-1'], (game.screen_scale * 16, game.screen_scale * 16))
+        self.image = pygame.transform.scale(self.game.assets[f'pytron-{body_type}-1'], (game.screen_scale * 16, game.screen_scale * 16))
         self.facing_direction = Vector2(1, 0)
         self.width = 16
         self.height = 16
+        self.angular_acceleration = 0.1
 
-        self.deacceleration = 0.75
+        # Parts
+        self.next_part = None
+        self.previous_part = None
+
+        game.entities.append(self)
     
 
     def update(self):
-        speed = self.velocity.length()
-        self.velocity += self.move_input
-        self.velocity *= self.deacceleration
+        self.force += self.drive_force
+        self.add_spring_forces()
+
+        self.velocity += self.force * self.imass
+        self.velocity *= self.damping
         self.position += self.velocity
 
         self.handle_boundary_bounce()
 
-        if self.move_input.length() != 0:
-            self.facing_direction = self.facing_direction.lerp(self.move_input, 0.1)
+        self.handle_facing_direction()
 
-        self.move_input.x = 0
-        self.move_input.y = 0
+        self.force.x = 0
+        self.force.y = 0
 
 
     def draw(self, surface):
-        image = pygame.transform.rotate(self.image, -45 - self.facing_direction.angle)
-        surface.blit(image, self.position * self.game.screen_scale)
-    
+        if self.previous_part != None:
+            return
+        part = self
+        while True:
+            angle = part.facing_direction.angle
+            if math.isnan(angle):
+                angle = 0
+            
+            image = pygame.transform.rotate(part.image, -45 - angle)
+            surface.blit(image, part.position * self.game.screen_scale)
 
-    def set_move_direction(self, move_direction):
-        self.move_input.x = move_direction.x
-        self.move_input.y = move_direction.y
+            if part.next_part == None:
+                break
+            part = part.next_part
+
 
     def change_to_head(self):
         self.image = pygame.transform.scale(self.game.assets['pytron-head-1'], (self.game.screen_scale * 16, self.game.screen_scale * 16))
@@ -50,28 +75,63 @@ class PytronBody:
         self.image = pygame.transform.scale(self.game.assets['pytron-body-1'], (self.game.screen_scale * 16, self.game.screen_scale * 16))
     
 
+    def set_drive_force(self, move_input, drive_strength):
+        self.drive_force.x = move_input.x * drive_strength
+        self.drive_force.y = move_input.y * drive_strength
+
+
+    def add_spring_forces(self):
+        if self.next_part != None:
+            self.add_spring_force(self.next_part, self.next_pull_constant)
+        if self.previous_part != None:
+            self.add_spring_force(self.previous_part, self.previous_pull_constant)
+    
+
+    def add_spring_force(self, other, k):
+        r = Vector2(other.position.x - self.position.x, other.position.y - self.position.y)
+        length = r.length()
+        if length > self.rest_length:
+            # F = -k(x - l)
+            length -= self.rest_length
+            r.normalize()
+            r *= length * k
+            self.force += r
+
+
+    def handle_facing_direction(self):
+        direction = Vector2(1, 0)
+        if self.next_part == None:
+            direction.x = self.drive_force.x
+            direction.y = self.drive_force.y
+        elif self.previous_part == None:
+            direction.x = self.next_part.position.x - self.position.x
+            direction.y = self.next_part.position.y - self.position.y
+        else:
+            direction.x = self.next_part.position.x - self.previous_part.position.x
+            direction.y = self.next_part.position.y - self.previous_part.position.y
+        if direction.length() != 0:
+            direction.normalize()
+            self.facing_direction = self.facing_direction.lerp(direction, self.angular_acceleration)
+
+
     def handle_boundary_bounce(self):
         if self.position.x < 0:
             self.position.x *= -1
             self.velocity.x *= -1
 
             self.facing_direction.x = 1
-            self.move_input.x = 1
         elif self.position.x > self.game.screen_base_width - self.width:
             self.position.x = 2 * (self.game.screen_base_width - self.width) - self.position.x
             self.velocity.x *= -1
 
             self.facing_direction.x = -1
-            self.move_input.x = -1
         if self.position.y < 0:
             self.position.y *= -1
             self.velocity.y *= -1
 
             self.facing_direction.y = 1
-            self.move_input.y = 1
         elif self.position.y > self.game.screen_base_height - self.height:
             self.position.y = 2 * (self.game.screen_base_height - self.height) - self.position.y
             self.velocity.y *= -1
 
             self.facing_direction.y = -1
-            self.move_input.y = -1

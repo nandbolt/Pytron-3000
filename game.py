@@ -36,21 +36,21 @@ class Game:
 
         # Entities
         self.player = None
-        self.snakes = []
+        self.entities = []
 
         self.start()
     
     def run(self):
         while True:
             # Update entities
-            for snake in self.snakes:
-                snake.update()
+            for entity in self.entities:
+                entity.update()
 
             # Render
             self.screen.fill((0, 0, 0))
             self.screen.blit(self.background_image, (0, 0))
-            for snake in self.snakes:
-                snake.draw(self.screen)
+            for entity in self.entities:
+                entity.draw(self.screen)
 
             # Input
             for event in pygame.event.get():
@@ -72,6 +72,8 @@ class Game:
                         self.input_shoot = True
                     if event.key == pygame.K_F11:
                         pygame.display.toggle_fullscreen()
+                    if event.key == pygame.K_p:
+                        self.restart()
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_d:
                         self.input_right = False
@@ -90,19 +92,22 @@ class Game:
             pygame.display.update()
             self.clock.tick(60)
 
+            # Debug
+            #print(len(self.entities))
+
 
 
     def restart(self):
         self.player = None
-        self.snakes = []
+        self.entities = []
 
         self.start()
 
 
     def start(self):
-        self.player = Pytron(self, self.screen_base_width * 0.5, self.screen_base_height * 0.5, 5)
-        self.player.set_controller(PlayerController(self, self.player))
-        self.snakes = [self.player]
+        self.player = Pytron(self, self.screen_base_width * 0.5, self.screen_base_height * 0.5, 10)
+        self.player.controller = PlayerController(self, self.player)
+        self.entities.append(self.player)
         for i in range(10):
             self.spawn_npc_snake()
 
@@ -112,8 +117,7 @@ class Game:
         y = random.randrange(0, self.screen_base_height)
         segments = random.randint(2, 5)
         snake = Pytron(self, x, y, segments)
-        snake.set_controller(NPCController(self, snake))
-        self.snakes.append(snake)
+        self.entities.append(snake)
 
 def main():
     Game().run()
