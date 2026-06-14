@@ -21,7 +21,7 @@ class PytronBody:
 
         # Body
         self.body_type = body_type
-        self.image = pygame.transform.scale(self.game.assets[f'pytron-{body_type}-1'], (game.screen_scale * 16, game.screen_scale * 16))
+        self.image = self.game.assets[f'pytron-{body_type}-1']
         self.facing_direction = Vector2(1, 0)
         self.width = 16
         self.height = 16
@@ -42,7 +42,7 @@ class PytronBody:
         self.velocity *= self.damping
         self.position += self.velocity
 
-        self.handle_boundary_bounce()
+        self.handle_boundary_collisions()
 
         self.handle_facing_direction()
 
@@ -60,7 +60,7 @@ class PytronBody:
                 angle = 0
             
             image = pygame.transform.rotate(part.image, -45 - angle)
-            surface.blit(image, part.position * self.game.screen_scale)
+            surface.blit(image, part.position)
 
             if part.next_part == None:
                 break
@@ -68,12 +68,22 @@ class PytronBody:
 
 
     def change_to_head(self):
-        self.image = pygame.transform.scale(self.game.assets['pytron-head-1'], (self.game.screen_scale * 16, self.game.screen_scale * 16))
+        if self.body_type == 'head':
+            return
+        self.body_type = 'head'
+        self.on_body_type_changed()
     
 
     def change_to_body(self):
-        self.image = pygame.transform.scale(self.game.assets['pytron-body-1'], (self.game.screen_scale * 16, self.game.screen_scale * 16))
+        if self.body_type == 'body':
+            return
+        self.body_type = 'body'
+        self.on_body_type_changed()
     
+
+    def on_body_type_changed(self):
+        self.image = self.game.assets[f'pytron-{self.body_type}-1']
+
 
     def set_drive_force(self, move_input, drive_strength):
         self.drive_force.x = move_input.x * drive_strength
@@ -114,24 +124,21 @@ class PytronBody:
             self.facing_direction = self.facing_direction.lerp(direction, self.angular_acceleration)
 
 
-    def handle_boundary_bounce(self):
-        if self.position.x < 0:
-            self.position.x *= -1
-            self.velocity.x *= -1
+    def handle_boundary_collisions(self):
+        x1 = 0
+        y1 = 0
+        x2 = self.game.room.get_width() - self.width
+        y2 = self.game.room.get_height() - self.height
 
-            self.facing_direction.x = 1
-        elif self.position.x > self.game.screen_base_width - self.width:
-            self.position.x = 2 * (self.game.screen_base_width - self.width) - self.position.x
-            self.velocity.x *= -1
-
-            self.facing_direction.x = -1
-        if self.position.y < 0:
-            self.position.y *= -1
-            self.velocity.y *= -1
-
-            self.facing_direction.y = 1
-        elif self.position.y > self.game.screen_base_height - self.height:
-            self.position.y = 2 * (self.game.screen_base_height - self.height) - self.position.y
-            self.velocity.y *= -1
-
-            self.facing_direction.y = -1
+        if self.position.x < x1:
+            self.position.x = x1
+            self.velocity.x = 0
+        elif self.position.x > x2:
+            self.position.x = x2
+            self.velocity.x = 0
+        if self.position.y < y1:
+            self.position.y = y1
+            self.velocity.y = 0
+        elif self.position.y > y2:
+            self.position.y = y2
+            self.velocity.y = 0

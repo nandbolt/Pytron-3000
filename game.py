@@ -12,11 +12,15 @@ class Game:
         # Pygame
         pygame.init()
         pygame.display.set_caption('Pytron3000')
-        self.screen_base_width = 640
-        self.screen_base_height = 360
-        self.screen_scale = 2
-        self.screen = pygame.display.set_mode((self.screen_base_width * self.screen_scale, self.screen_base_height * self.screen_scale))
         self.clock = pygame.time.Clock()
+
+        # Room
+        self.room_width = 640
+        self.room_height = 360
+        self.room = pygame.Surface((self.room_width, self.room_height))
+
+        # Screen
+        self.screen = pygame.display.set_mode((1280, 720))
 
         # Assets
         self.assets = {
@@ -24,7 +28,7 @@ class Game:
             'pytron-head-1' : load_image('pytron/heads/pytron_head-1_0.png'),
             'pytron-body-1' : load_image('pytron/bodies/pytron_body-1_0.png'),
         }
-        self.background_image = pygame.transform.scale(self.assets['background-1'], (self.screen_scale * 640, self.screen_scale * 360))
+        self.background_image = self.assets['background-1']
 
         # Inputs
         self.input_right = False
@@ -47,10 +51,11 @@ class Game:
                 entity.update()
 
             # Render
-            self.screen.fill((0, 0, 0))
-            self.screen.blit(self.background_image, (0, 0))
+            self.room.fill((0, 0, 0))
+            self.room.blit(self.background_image, (0, 0))
             for entity in self.entities:
-                entity.draw(self.screen)
+                entity.draw(self.room)
+            self.screen.blit(pygame.transform.scale(self.room, self.screen.get_size()))
 
             # Input
             for event in pygame.event.get():
@@ -105,7 +110,7 @@ class Game:
 
 
     def start(self):
-        self.player = Pytron(self, self.screen_base_width * 0.5, self.screen_base_height * 0.5, 10)
+        self.player = Pytron(self, self.room.get_width() * 0.5, self.room.get_height(), 10)
         self.player.controller = PlayerController(self, self.player)
         self.entities.append(self.player)
         for i in range(10):
@@ -113,8 +118,8 @@ class Game:
 
 
     def spawn_npc_snake(self):
-        x = random.randrange(0, self.screen_base_width)
-        y = random.randrange(0, self.screen_base_height)
+        x = random.randrange(0, self.room.get_width())
+        y = random.randrange(0, self.room.get_height())
         segments = random.randint(2, 5)
         snake = Pytron(self, x, y, segments)
         self.entities.append(snake)
