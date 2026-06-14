@@ -36,7 +36,7 @@ class Pytron:
             if r.length() != 0:
                 r.normalize()
 
-            body.set_move_direction(r * distance / 2000)
+            body.set_move_direction(r * distance / 256)
             body.update()
 
 

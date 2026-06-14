@@ -10,7 +10,10 @@ class Game:
         # Pygame
         pygame.init()
         pygame.display.set_caption('Pytron3000')
-        self.screen = pygame.display.set_mode((1280, 720))
+        self.screen_base_width = 320
+        self.screen_base_height = 180
+        self.screen_scale = 4
+        self.screen = pygame.display.set_mode((self.screen_base_width * self.screen_scale, self.screen_base_height * self.screen_scale))
         self.clock = pygame.time.Clock()
 
         # Assets
@@ -26,7 +29,7 @@ class Game:
         self.input_up = False
 
         # Player
-        self.player = Pytron(self, 600, 300, 5)
+        self.player = Pytron(self, self.screen_base_width * 0.5, self.screen_base_height * 0.5, 5)
     
     def run(self):
         while True:
@@ -55,6 +58,8 @@ class Game:
                         self.input_down = True
                     if event.key == pygame.K_w:
                         self.input_up = True
+                    if event.key == pygame.K_F11:
+                        pygame.display.toggle_fullscreen()
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_d:
                         self.input_right = False

@@ -10,7 +10,8 @@ class PytronBody:
         self.velocity = Vector2()
         self.move_input = Vector2()
         self.body_type = body_type
-        self.image = self.game.assets['pytron-body-1']
+        self.image = pygame.transform.scale(self.game.assets['pytron-body-1'], (game.screen_scale * 16, game.screen_scale * 16))
+        self.facing_direction = Vector2(1, 0)
 
         self.deacceleration = 0.75
     
@@ -21,12 +22,16 @@ class PytronBody:
         self.velocity *= self.deacceleration
         self.position += self.velocity
 
+        if self.move_input.length() != 0:
+            self.facing_direction = self.facing_direction.lerp(self.move_input, 0.1)
+
         self.move_input.x = 0
         self.move_input.y = 0
 
 
     def draw(self, surface):
-        surface.blit(self.image, self.position)
+        image = pygame.transform.rotate(self.image, -45 - self.facing_direction.angle)
+        surface.blit(image, self.position * self.game.screen_scale)
     
 
     def set_move_direction(self, move_direction):
@@ -34,8 +39,8 @@ class PytronBody:
         self.move_input.y = move_direction.y
 
     def change_to_head(self):
-        self.image = self.game.assets['pytron-head-1']
+        self.image = pygame.transform.scale(self.game.assets['pytron-head-1'], (self.game.screen_scale * 16, self.game.screen_scale * 16))
     
 
     def change_to_body(self):
-        self.image = self.game.assets['pytron-body-1']
+        self.image = pygame.transform.scale(self.game.assets['pytron-body-1'], (self.game.screen_scale * 16, self.game.screen_scale * 16))
