@@ -20,9 +20,11 @@ class Game:
 
         # Assets
         self.assets = {
+            'background-1' : load_image('background/background-1.png'),
             'pytron-head-1' : load_image('pytron/heads/pytron_head-1_0.png'),
             'pytron-body-1' : load_image('pytron/bodies/pytron_body-1_0.png'),
         }
+        self.background_image = pygame.transform.scale(self.assets['background-1'], (self.screen_scale * 640, self.screen_scale * 360))
 
         # Inputs
         self.input_right = False
@@ -46,6 +48,7 @@ class Game:
 
             # Render
             self.screen.fill((0, 0, 0))
+            self.screen.blit(self.background_image, (0, 0))
             for snake in self.snakes:
                 snake.draw(self.screen)
 
