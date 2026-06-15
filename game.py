@@ -27,6 +27,10 @@ class Game:
         # Assets
         self.assets = {
             'background-1' : load_image('background/background-1.png'),
+            'pytron-head-0' : load_image('pytron/heads/pytron_head-0_0.png'),
+            'pytron-head-0-bite-start' : load_image('pytron/heads/pytron_head-0_1.png'),
+            'pytron-head-0-bite' : load_image('pytron/heads/pytron_head-0_2.png'),
+            'pytron-body-0' : load_image('pytron/bodies/pytron_body-0_0.png'),
             'pytron-head-1' : load_image('pytron/heads/pytron_head-1_0.png'),
             'pytron-head-1-bite-start' : load_image('pytron/heads/pytron_head-1_1.png'),
             'pytron-head-1-bite' : load_image('pytron/heads/pytron_head-1_2.png'),
@@ -128,8 +132,9 @@ class Game:
 
 
     def start(self):
-        self.player = Pytron(self, self.room.get_width() * 0.5, self.room.get_height(), 10)
+        self.player = Pytron(self, self.room.get_width() * 0.5, self.room.get_height(), 2)
         self.player.controller = PlayerController(self, self.player)
+        self.player.set_body_variant(0)
         self.entities.append(self.player)
         for i in range(10):
             self.spawn_npc_snake()

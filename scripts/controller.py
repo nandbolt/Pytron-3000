@@ -36,6 +36,7 @@ class NPCController(Controller):
         Controller.__init__(self, game, pytron)
         self.time_to_think = 30
         self.think_timer = 0
+        self.can_bite = True
 
 
     def update(self):
@@ -53,7 +54,7 @@ class NPCController(Controller):
 
         if self.pytron.state == 'coiled':
             self.bite_input = False
-        else:
+        elif self.can_bite:
             self.bite_input = random.randint(0, 2) == 0
         
         self.think_timer = 0

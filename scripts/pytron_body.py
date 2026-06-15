@@ -3,10 +3,12 @@ import math
 import random
 from pygame.math import Vector2
 
+import datetime
+
 class PytronBody:
 
 
-    def __init__(self, game, x, y, pytron, body_type='body'):
+    def __init__(self, game, x, y, pytron, body_type='body', body_variant=1):
         self.game = game
         self.pytron = pytron
 
@@ -23,6 +25,7 @@ class PytronBody:
 
         # Body
         self.body_type = body_type
+        self.body_variant = body_variant
         self.image = self.game.assets[f'pytron-{body_type}-1']
         self.facing_direction = Vector2(1, 0)
         self.width = self.image.get_width()
@@ -69,17 +72,19 @@ class PytronBody:
         if self.previous_part != None:
             return
         part = self
-        while True:
+        max_iter = 1000
+        iter = 0
+        while iter < max_iter:
             angle = part.facing_direction.angle
             if math.isnan(angle):
                 angle = 0
             
             image = pygame.transform.rotate(part.image, -45 - angle)
             surface.blit(image, part.position)
-
             if part.next_part == None:
                 break
             part = part.next_part
+            iter += 1
 
 
     def change_to_head(self):
@@ -90,7 +95,9 @@ class PytronBody:
     
 
     def change_head_type(self, state):
-        key = f'pytron-{self.body_type}-1'
+        if self.body_type != 'head':
+            self.change_to_head()
+        key = f'pytron-{self.body_type}-{self.body_variant}'
         if state == 'coiled':
             key += '-bite-start'
         elif state == 'lunging' or state == 'eating':
@@ -105,8 +112,13 @@ class PytronBody:
         self.on_body_type_changed()
     
 
+    def set_body_variant(self, body_variant):
+        self.body_variant = body_variant
+        self.on_body_type_changed()
+
+
     def on_body_type_changed(self):
-        self.image = self.game.assets[f'pytron-{self.body_type}-1']
+        self.image = self.game.assets[f'pytron-{self.body_type}-{self.body_variant}']
 
 
     def set_drive_force(self, move_input, drive_strength):
@@ -175,5 +187,22 @@ class PytronBody:
             self.previous_part.next_part = None
         self.next_part = None
         self.previous_part = None
-        if self.body_type == 'head':
-            self.pytron.head = None
+    
+
+    def set_previous_part(self, part):
+        if self.previous_part != None:
+            self.previous_part.next_part = part
+        if part != None:
+            part.next_part = self
+            part.previous_part = self.previous_part
+        self.previous_part = part
+        part.change_to_body()
+
+
+    def set_next_part(self, part):
+        if self.next_part != None:
+            self.next_part.previous_part = part
+        if part != None:
+            part.previous_part = self
+            part.next_part = self.next_part
+        self.next_part = part
