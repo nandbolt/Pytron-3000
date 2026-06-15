@@ -5,6 +5,7 @@ from pygame.math import Vector2
 
 from scripts.utils import load_image
 from scripts.pytron import Pytron
+from scripts.meteor import Meteor
 from scripts.controller import PlayerController, NPCController
 
 class Game:
@@ -13,6 +14,11 @@ class Game:
         pygame.init()
         pygame.display.set_caption('Pytron3000')
         self.clock = pygame.time.Clock()
+
+        # Font
+        pygame.font.init()
+        self.font = pygame.font.SysFont('freesanbold.ttf', 50)
+        self.minifont = pygame.font.SysFont('freesanbold.ttf', 30)
 
         # Room
         self.room_width = 640
@@ -42,6 +48,8 @@ class Game:
             'decal-trail-1' : load_image('decal/decal-trail-1.png'),
             'decal-trail-2' : load_image('decal/decal-trail-2.png'),
             'decal-trail-3' : load_image('decal/decal-trail-3.png'),
+            'meteor-0' : load_image('meteor/meteor_0.png'),
+            'meteor-1' : load_image('meteor/meteor_1.png'),
         }
         self.background_image = self.assets['background-1']
 
@@ -58,10 +66,34 @@ class Game:
         self.entities = []
         self.particles = []
 
-        self.start()
+        # GUI
+        self.display_message = ""
+        self.score = 0
+        self.high_score = 0
+
+        # States
+        self.main_menu = True
+        self.game_ended = False
+
+        # Spawner
+        self.spawn_timer = 0
+        self.time_to_spawn = 10 * 60
     
     def run(self):
         while True:
+            # Check player
+            if not self.game_ended and self.player != None and self.player.state == 'eaten':
+                self.end_game()
+
+            if not self.main_menu and not self.game_ended:
+                self.spawn_timer += 1
+                if self.spawn_timer >= self.time_to_spawn:
+                    meteors = random.randint(1, 3)
+                    for i in range(meteors):
+                        self.spawn_meteor()
+                    self.spawn_timer = 0
+                    self.time_to_spawn = (random.randint(0, 2) * 5 + 10) * 60
+
             # Update entities
             for entity in self.entities:
                 entity.update()
@@ -77,6 +109,18 @@ class Game:
                 particle.draw(self.room)
                 if kill:
                     self.particles.remove(particle)
+            if self.main_menu:
+                self.room.blit(self.font.render('Pytron3000\n\n(awsd) move     (space) lunge\n\npress space to start', True, (255, 255, 255)), (100, 100))
+            if self.game_ended:
+                self.room.blit(self.font.render(self.message, True, (255, 255, 255)), (100, 100))
+            else:
+                self.room.blit(self.minifont.render(str(self.score), True, (255, 255, 255)), (10, 330))
+                high_score_text = "H:"
+                if self.high_score > 0:
+                    high_score_text += str(self.high_score)
+                else:
+                    high_score_text += 'NONE'
+                self.room.blit(self.minifont.render(high_score_text, True, (255, 125, 0)), (300, 330))
             self.screen.blit(pygame.transform.scale(self.room, self.screen.get_size()))
 
             # Input
@@ -112,6 +156,8 @@ class Game:
                         self.input_up = False
                     if event.key == pygame.K_SPACE:
                         self.input_dash = False
+                        if self.main_menu:
+                            self.start()
                     if event.key == pygame.K_j:
                         self.input_shoot = False
 
@@ -127,25 +173,55 @@ class Game:
     def restart(self):
         self.player = None
         self.entities = []
+        self.game_ended = False
+        self.message = ''
+        self.score = 0
 
         self.start()
 
 
     def start(self):
+        self.main_menu = False
         self.player = Pytron(self, self.room.get_width() * 0.5, self.room.get_height(), 2)
         self.player.controller = PlayerController(self, self.player)
         self.player.set_body_variant(0)
         self.entities.append(self.player)
         for i in range(10):
-            self.spawn_npc_snake()
+            self.spawn_meteor()
+
+
+    def spawn_meteor(self):
+        x = random.randrange(0, self.room.get_width())
+        y = random.randrange(0, self.room.get_height())
+        meteor = Meteor(self, x, y)
+        self.entities.append(meteor)
 
 
     def spawn_npc_snake(self):
         x = random.randrange(0, self.room.get_width())
         y = random.randrange(0, self.room.get_height())
+        self.spawn_npc_snake_at(x, y)
+    
+
+    def spawn_npc_snake_at(self, x, y):
         segments = random.randint(2, 5)
         snake = Pytron(self, x, y, segments)
         self.entities.append(snake)
+    
+
+    def end_game(self):
+        self.game_ended = True
+        high_score_text = ''
+        if self.score > self.high_score:
+            self.high_score = self.score
+            high_score_text = '(new high)'
+
+        messages = [
+            'eaten...',
+            'devoured...',
+            'consumed...',
+        ]
+        self.message = messages[random.randint(0, len(messages) - 1)] + f'\n\nate {self.score}{high_score_text}\n\n(p) restart'
 
 def main():
     Game().run()

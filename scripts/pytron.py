@@ -157,3 +157,5 @@ class Pytron:
         self.food.detach()
         self.head.set_previous_part(self.food)
         self.food = None
+        if self.game.player == self:
+            self.game.score += 1
