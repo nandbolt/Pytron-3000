@@ -20,6 +20,10 @@ class Game:
         self.font = pygame.font.SysFont('freesanbold.ttf', 50)
         self.minifont = pygame.font.SysFont('freesanbold.ttf', 30)
 
+        # Audio
+        pygame.mixer.init()
+        self.eat_sound = pygame.mixer.Sound('data/sfxs/eat.wav')
+
         # Room
         self.room_width = 640
         self.room_height = 360

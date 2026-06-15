@@ -151,6 +151,8 @@ class Pytron:
         self.head.set_next_part(food)
         food.pytron = self
         self.food = food
+        
+        self.game.eat_sound.play()
     
 
     def convert_food(self):
