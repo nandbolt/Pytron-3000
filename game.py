@@ -82,6 +82,7 @@ class Game:
         # States
         self.main_menu = True
         self.game_ended = False
+        self.practice = True
 
         # Settings
         self.grass_blood = True
@@ -125,9 +126,11 @@ class Game:
                 title = 'Pytron3000'
                 if self.hide_title:
                     title = ''
-                self.room.blit(self.font.render(f'{title}\n\n(awsd) move     (space) lunge\n\npress space to start', True, (255, 255, 255)), (100, 100))
-            if self.game_ended:
+                self.room.blit(self.font.render(f'{title}\n\n(awsd) move     (space) lunge\n\npress space to start\n\npress o to practice', True, (255, 255, 255)), (100, 100))
+            elif self.game_ended:
                 self.room.blit(self.font.render(self.message, True, (255, 255, 255)), (100, 100))
+            elif self.practice:
+                self.room.blit(self.minifont.render('(awsd) move, (space) lunge, (p) start game', True, (255, 255, 255)), (10, 330))
             else:
                 self.room.blit(self.minifont.render(str(self.score), True, (255, 255, 255)), (10, 330))
                 high_score_text = "H:"
@@ -159,6 +162,10 @@ class Game:
                     if event.key == pygame.K_F11:
                         pygame.display.toggle_fullscreen()
                     if event.key == pygame.K_p:
+                        self.practice = False
+                        self.restart()
+                    if event.key == pygame.K_o:
+                        self.practice = True
                         self.restart()
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_d:
@@ -197,7 +204,11 @@ class Game:
 
     def start(self):
         self.main_menu = False
-        self.player = Pytron(self, self.room.get_width() * 0.5, self.room.get_height() * 0.5, 2)
+
+        player_segments = 2
+        if self.practice:
+            player_segments = random.randint(1, 20)
+        self.player = Pytron(self, self.room.get_width() * 0.5, self.room.get_height() * 0.5, player_segments)
         self.player.controller = PlayerController(self, self.player)
         self.player.set_body_variant(0)
         self.entities.append(self.player)
@@ -206,6 +217,9 @@ class Game:
 
 
     def spawn_meteor(self):
+        if self.practice:
+            return
+
         x = random.randrange(0, self.room.get_width())
         y = random.randrange(0, self.room.get_height())
         meteor = Meteor(self, x, y)
