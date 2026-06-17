@@ -75,7 +75,10 @@ class Pytron:
                 pass
             case 'eating':
                 splatter_index = random.randint(1, 3)
-                self.game.decals.blit(self.game.assets[f'decal-blood-splatter-{splatter_index}'], self.head.position)
+                blood_type = ""
+                if self.game.grass_blood:
+                    blood_type = "grass-"
+                self.game.decals.blit(self.game.assets[f'decal-{blood_type}blood-splatter-{splatter_index}'], self.head.position)
             case 'eaten':
                 print('ive been eaten!')
             case _:
@@ -121,7 +124,10 @@ class Pytron:
                 center = Vector2(self.head.position.x + half_width, self.head.position.y + half_height)
                 facing = Vector2(self.head.facing_direction.x * half_width, self.head.facing_direction.y * half_height)
                 facing.normalize()
-                particle = Particle(self.game, center + facing / 8, 5, 'blood', particle_velocity)
+                particle_type = 'blood'
+                if self.game.grass_blood:
+                    particle_type = 'grass-blood'
+                particle = Particle(self.game, center + facing / 8, 5, particle_type, particle_velocity)
                 self.game.particles.append(particle)
                 
                 if self.state_timer >= self.time_to_eat or self.head.next_part == None:

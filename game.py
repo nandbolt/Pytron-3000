@@ -49,6 +49,10 @@ class Game:
             'decal-blood-splatter-1' : load_image('decal/decal-blood-splatter-1.png'),
             'decal-blood-splatter-2' : load_image('decal/decal-blood-splatter-2.png'),
             'decal-blood-splatter-3' : load_image('decal/decal-blood-splatter-3.png'),
+            'particle-grass-blood' : load_image('particle/particle-grass-blood.png'),
+            'decal-grass-blood-splatter-1' : load_image('decal/decal-grass-blood-splatter-1.png'),
+            'decal-grass-blood-splatter-2' : load_image('decal/decal-grass-blood-splatter-2.png'),
+            'decal-grass-blood-splatter-3' : load_image('decal/decal-grass-blood-splatter-3.png'),
             'decal-trail-1' : load_image('decal/decal-trail-1.png'),
             'decal-trail-2' : load_image('decal/decal-trail-2.png'),
             'decal-trail-3' : load_image('decal/decal-trail-3.png'),
@@ -78,6 +82,10 @@ class Game:
         # States
         self.main_menu = True
         self.game_ended = False
+
+        # Settings
+        self.grass_blood = True
+        self.hide_title = True
 
         # Spawner
         self.spawn_timer = 0
@@ -114,7 +122,10 @@ class Game:
                 if kill:
                     self.particles.remove(particle)
             if self.main_menu:
-                self.room.blit(self.font.render('Pytron3000\n\n(awsd) move     (space) lunge\n\npress space to start', True, (255, 255, 255)), (100, 100))
+                title = 'Pytron3000'
+                if self.hide_title:
+                    title = ''
+                self.room.blit(self.font.render(f'{title}\n\n(awsd) move     (space) lunge\n\npress space to start', True, (255, 255, 255)), (100, 100))
             if self.game_ended:
                 self.room.blit(self.font.render(self.message, True, (255, 255, 255)), (100, 100))
             else:
@@ -186,7 +197,7 @@ class Game:
 
     def start(self):
         self.main_menu = False
-        self.player = Pytron(self, self.room.get_width() * 0.5, self.room.get_height(), 2)
+        self.player = Pytron(self, self.room.get_width() * 0.5, self.room.get_height() * 0.5, 2)
         self.player.controller = PlayerController(self, self.player)
         self.player.set_body_variant(0)
         self.entities.append(self.player)

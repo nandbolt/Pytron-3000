@@ -9,7 +9,7 @@ class Particle:
         self.velocity = velocity
         self.lifetime = lifetime
         self.particle_type = particle_type
-        self.image = game.assets['particle-' + particle_type]
+        self.image = game.assets[f'particle-{particle_type}']
     
 
     def update(self):
